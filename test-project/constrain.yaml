@@ -1,0 +1,23 @@
+# Constrain project configuration
+project_name: "test-project"
+version: "0.1.0"
+
+# Execution mode: memory | production
+mode: memory
+
+# Event bus backend: memory | rabbitmq | redis
+bus_backend: memory
+
+# State store backend: memory | postgres | sqlite
+state_store_backend: memory
+
+# Tracing mode: dev | production
+tracing_mode: dev
+
+# Skill paths to auto-discover
+skill_paths:
+  - skills
+
+# Workflow paths to auto-discover
+workflow_paths:
+  - workflows
