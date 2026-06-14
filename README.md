@@ -126,6 +126,42 @@ More examples in the `examples/hello-world/` directory.
 
 ---
 
+## CLI Tool
+
+Constrain ships with a built-in CLI for scaffolding and project management.
+
+```bash
+# See available commands
+uv run constrain --help
+
+# Scaffold a new project
+uv run constrain init my-project
+
+# Generate components from templates
+cd my-project
+uv run constrain new skill my-task
+uv run constrain new agent worker
+uv run constrain new workflow data-pipeline
+
+# List project components
+uv run constrain list skills
+uv run constrain list agents
+uv run constrain list workflows
+```
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `init [name]` | Scaffold a new Constrain project with `constrain.yaml`, `skills/`, `agents/`, `workflows/`, and a `run.py` entry point |
+| `new skill <name>` | Generate a new skill class from template |
+| `new agent <name>` | Generate a new agent class from template |
+| `new workflow <name>` | Generate a new workflow YAML definition |
+| `list skills\|agents\|workflows` | List existing project components |
+| `run [workflow]` | Execute a workflow (`--dev` for in-memory mode, `-i key=val` for inputs) |
+
+---
+
 ## Docker Deployment
 
 ### Full Production Stack
@@ -205,6 +241,10 @@ docker run --rm \
 
 ```text
 .
+├── cli/                     # CLI scaffolding tool
+│   ├── main.py              # Entry point (click)
+│   ├── templates.py         # Scaffold templates
+│   └── commands/            # CLI subcommands (init, new, list, run)
 ├── core/                    # Core engines
 │   ├── commander/           # Commander: DAG orchestration engine
 │   ├── arbiter/             # Arbiter: resource locks + retry + policies

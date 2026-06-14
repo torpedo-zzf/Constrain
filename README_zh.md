@@ -121,6 +121,42 @@ asyncio.run(main())
 
 ---
 
+## CLI 脚手架工具
+
+Constrain 内置了命令行工具，用于项目脚手架搭建与日常管理。
+
+```bash
+# 查看可用命令
+uv run constrain --help
+
+# 脚手架初始化新项目
+uv run constrain init my-project
+
+# 从模板生成组件
+cd my-project
+uv run constrain new skill my-task
+uv run constrain new agent worker
+uv run constrain new workflow data-pipeline
+
+# 列出项目已有组件
+uv run constrain list skills
+uv run constrain list agents
+uv run constrain list workflows
+```
+
+### 命令列表
+
+| 命令 | 说明 |
+|------|------|
+| `init [name]` | 初始化新项目，生成 `constrain.yaml`、`skills/`、`agents/`、`workflows/` 和 `run.py` 入口文件 |
+| `new skill <name>` | 从模板生成 Skill 类 |
+| `new agent <name>` | 从模板生成 Agent 类 |
+| `new workflow <name>` | 从模板生成 workflow YAML 定义 |
+| `list skills\|agents\|workflows` | 列出项目已有组件 |
+| `run [workflow]` | 执行工作流（`--dev` 启用内存模式，`-i key=val` 传入参数） |
+
+---
+
 ## Docker 部署
 
 ### 全栈生产环境
@@ -200,6 +236,10 @@ docker run --rm \
 
 ```text
 .
+├── cli/                     # CLI 脚手架工具
+│   ├── main.py              # 入口文件（click）
+│   ├── templates.py         # 脚手架模板
+│   └── commands/            # CLI 子命令（init, new, list, run）
 ├── core/                    # 核心引擎
 │   ├── commander/           # 指挥官：DAG 编排引擎
 │   ├── arbiter/             # 仲裁器：资源锁 + 重试 + 策略
