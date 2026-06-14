@@ -1,0 +1,145 @@
+# ============================================================
+# Constrain — Production stack with docker-compose
+#
+# Services:
+#   app       Constrain framework (your custom agents run here)
+#   jaeger    Distributed tracing (OTLP gRPC + UI)
+#   redis     Caching, distributed locks, idempotency
+#   rabbitmq  Event bus (message queue + fair dispatch)
+#   postgres  State store (event sourcing, workflow state)
+#
+# Usage:
+#   docker compose up -d              # Start all services
+#   docker compose logs -f app        # Watch app logs
+#   docker compose down -v            # Stop and clean volumes
+#
+# Access:
+#   Jaeger UI:  http://localhost:16686
+#   RabbitMQ:   http://localhost:15672 (guest/guest)
+# ============================================================
+
+services:
+
+  # ============================================================
+  # Application — runs your Constrain agents
+  # ============================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # --- Mode ---
+      CONSTRAIN_MODE: "production"
+      CONSTRAIN_TRACING_MODE: "production"
+      CONSTRAIN_SERVICE_NAME: "constrain"
+
+      # --- Event Bus ---
+      CONSTRAIN_BUS_BACKEND: "rabbitmq"
+      CONSTRAIN_RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"
+
+      # --- State Store ---
+      CONSTRAIN_STATE_STORE_BACKEND: "postgres"
+      CONSTRAIN_POSTGRES_DSN: "postgresql://constrain:constrain@postgres:5432/constrain"
+
+      # --- Cache & Locks ---
+      CONSTRAIN_REDIS_URL: "redis://redis:6379/0"
+
+      # --- Tracing ---
+      CONSTRAIN_JAEGER_ENDPOINT: "http://jaeger:4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://jaeger:4317"
+      CONSTRAIN_SAMPLING_RATE: "1.0"
+    volumes:
+      # Mount custom skills and workflows from host
+      - ./skills:/app/skills:ro
+      - ./workflows:/app/workflows:ro
+    depends_on:
+      jaeger:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    # Override CMD to run your application:
+    # command: ["app.py"]
+
+  # ============================================================
+  # Jaeger — distributed tracing (OTLP native)
+  # ============================================================
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686"       # UI
+      - "4317:4317"         # OTLP gRPC
+      - "4318:4318"         # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    restart: unless-stopped
+
+  # ============================================================
+  # Redis — cache, locks, idempotency backend
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================================
+  # RabbitMQ — event bus / message queue
+  # ============================================================
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    ports:
+      - "5672:5672"         # AMQP
+      - "15672:15672"       # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ============================================================
+  # PostgreSQL — state store / event sourcing
+  # ============================================================
+  postgres:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: constrain
+      POSTGRES_USER: constrain
+      POSTGRES_PASSWORD: constrain
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U constrain -d constrain"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+
+volumes:
+  redis_data:
+  rabbitmq_data:
+  postgres_data:

@@ -1,0 +1,32 @@
+# Constrain production configuration
+# All values can be overridden via environment variables.
+# See core/harness/config.py for the full list.
+
+mode: production
+
+# --- Event Bus ---
+bus_backend: rabbitmq
+rabbitmq_url: "amqp://guest:guest@rabbitmq:5672/"
+
+# --- State Store ---
+state_store_backend: postgres
+postgres_dsn: "postgresql://constrain:constrain@postgres:5432/constrain"
+
+# --- Caching & Locks ---
+redis_url: "redis://redis:6379/0"
+
+# --- Tracing ---
+tracing_enabled: true
+tracing_mode: production
+tracing_service_name: constrain
+jaeger_endpoint: "http://jaeger:4317"
+jaeger_insecure: true
+sampling_rate: 1.0
+
+# --- Quality Gate ---
+l2_confidence_threshold: 0.8
+
+# --- Runtime ---
+skill_paths:
+  - /app/skills
+graceful_shutdown_timeout: 30

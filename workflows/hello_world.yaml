@@ -1,0 +1,14 @@
+# Example workflow definition
+# Place workflow YAML files here — they are auto-discovered at startup.
+name: hello_world
+version: "1.0.0"
+
+tasks:
+  - task_id: step1
+    skill_name: greeting
+    input_mapping:
+      name: "$input.name"
+    timeout: 300
+    retry_policy: default
+
+edges: []

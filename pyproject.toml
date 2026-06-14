@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "constrain-framework"
+version = "0.1.0"
+description = "Production-grade multi-agent orchestration framework with constrained autonomy"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.0.0",
+    "anyio>=4.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+rabbitmq = ["aio-pika>=9.0.0"]
+redis = ["redis[hiredis]>=5.0.0"]
+postgres = ["asyncpg>=0.29.0"]
+otel = ["opentelemetry-api>=1.20.0", "opentelemetry-sdk>=1.20.0"]
+jaeger = [
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.20.0",
+]
+all = [
+    "constrain-framework[rabbitmq,redis,postgres,jaeger]",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "eval-type-backport>=0.2",
+]
+
+[tool.uv]
+python-preference = "managed"
+
+[tool.hatch.build.targets.wheel]
+packages = ["core", "agent", "skill", "adapters"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
