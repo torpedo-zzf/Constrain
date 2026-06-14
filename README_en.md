@@ -1,7 +1,3 @@
-<div align="right">
-  <strong>English</strong> | <a href="README_zh.md">中文</a>
-</div>
-
 # Constrain
 
 <p align="center">
